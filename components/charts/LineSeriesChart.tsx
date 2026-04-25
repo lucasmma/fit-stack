@@ -29,8 +29,12 @@ export function LineSeriesChart({
   return (
     <div style={{ width: "100%", height }}>
       <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="hsl(var(--heroui-default-200))" strokeDasharray="3 3" vertical={false} />
+        <LineChart data={data} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid
+            stroke="hsl(var(--heroui-default-200))"
+            strokeDasharray="3 3"
+            vertical={false}
+          />
           <XAxis
             dataKey="x"
             stroke="hsl(var(--heroui-default-400))"

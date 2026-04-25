@@ -1,0 +1,2 @@
+- Create a StandardModal instead of declaring <Modal /> everywhere
+- After creating a plan, we should refresh the page to see the new plan, check if the other places also need this

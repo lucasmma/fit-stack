@@ -1,16 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
-import {
-  Button,
-  Input,
-  useDisclosure,
-  Progress,
-} from "@heroui/react";
+import { useMemo, useRef, useState } from "react";
+import { Button, Input, useDisclosure } from "@heroui/react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { ALLOWED_CONTENT_TYPES, MAX_PHOTO_BYTES } from "@/lib/schemas/photo";
+import {
+  ALLOWED_CONTENT_TYPES,
+  MAX_PHOTO_BYTES,
+  PHOTO_POSES,
+  POSE_LABEL,
+  type ConfirmPhotoSetItem,
+  type PhotoPose,
+} from "@/lib/schemas/photo";
 import { useZodForm } from "@/lib/hooks/use-zod-form";
 import { FormRoot } from "@/components/forms/FormRoot";
 import { TextAreaField, NumberField } from "@/components/forms/Field";
@@ -26,15 +28,39 @@ const uploadSchema = z.object({
 });
 
 type UploadInput = z.infer<typeof uploadSchema>;
+type AllowedContentType = (typeof ALLOWED_CONTENT_TYPES)[number];
+
+type SlotState = {
+  file: File | null;
+  preview: string | null;
+  status: "idle" | "uploading" | "done" | "error";
+};
+
+const initialSlotState = (): SlotState => ({
+  file: null,
+  preview: null,
+  status: "idle",
+});
 
 export function UploadPhotoButton() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [progress, setProgress] = useState(0);
+  const [slots, setSlots] = useState<Record<PhotoPose, SlotState>>(() => ({
+    FRONT: initialSlotState(),
+    LEFT: initialSlotState(),
+    BACK: initialSlotState(),
+    RIGHT: initialSlotState(),
+  }));
+  const photoSetIdRef = useRef<string | null>(null);
+  const uploadedItemsRef = useRef<Map<PhotoPose, ConfirmPhotoSetItem>>(new Map());
+  const [submitting, setSubmitting] = useState(false);
 
   const defaultDate = new Date().toISOString().slice(0, 10);
+
+  const filledCount = useMemo(
+    () => PHOTO_POSES.filter((pose) => slots[pose].file != null).length,
+    [slots],
+  );
 
   const form = useZodForm({
     schema: uploadSchema,
@@ -45,75 +71,162 @@ export function UploadPhotoButton() {
       notes: "",
     },
     onSubmit: async (values) => {
-      if (!file) {
-        toast.error("Please choose a photo");
+      const filled = PHOTO_POSES.filter((pose) => slots[pose].file != null);
+      if (filled.length === 0) {
+        toast.error("Choose at least one photo");
         return;
       }
-      await uploadFlow(file, values);
+      await uploadFlow(values, filled);
     },
   });
 
-  const uploadFlow = async (selected: File, values: UploadInput) => {
-    if (!ALLOWED_CONTENT_TYPES.includes(selected.type as (typeof ALLOWED_CONTENT_TYPES)[number])) {
+  const setSlot = (pose: PhotoPose, next: SlotState) => {
+    setSlots((prev) => {
+      const previous = prev[pose];
+      if (previous.preview && previous.preview !== next.preview) {
+        URL.revokeObjectURL(previous.preview);
+      }
+      return { ...prev, [pose]: next };
+    });
+  };
+
+  const handleFileChange = (pose: PhotoPose, file: File | null) => {
+    if (!file) {
+      setSlot(pose, initialSlotState());
+      return;
+    }
+    if (!ALLOWED_CONTENT_TYPES.includes(file.type as AllowedContentType)) {
       toast.error("Use JPG, PNG, or WebP");
       return;
     }
-    if (selected.size > MAX_PHOTO_BYTES) {
+    if (file.size > MAX_PHOTO_BYTES) {
       toast.error("File is too large (max 10MB)");
       return;
     }
+    uploadedItemsRef.current.delete(pose);
+    setSlot(pose, {
+      file,
+      preview: URL.createObjectURL(file),
+      status: "idle",
+    });
+  };
+
+  const uploadFlow = async (values: UploadInput, posesToUpload: PhotoPose[]) => {
+    setSubmitting(true);
+    if (!photoSetIdRef.current) {
+      photoSetIdRef.current = crypto.randomUUID();
+    }
+    const photoSetId = photoSetIdRef.current;
+
+    setSlots((prev) => {
+      const next = { ...prev };
+      for (const pose of posesToUpload) {
+        next[pose] = { ...next[pose], status: "uploading" };
+      }
+      return next;
+    });
+
+    const results = await Promise.allSettled(
+      posesToUpload.map((pose) => uploadOne(pose)),
+    );
+
+    const failedPoses: PhotoPose[] = [];
+    setSlots((prev) => {
+      const next = { ...prev };
+      results.forEach((result, idx) => {
+        const pose = posesToUpload[idx];
+        if (result.status === "fulfilled") {
+          uploadedItemsRef.current.set(pose, result.value);
+          next[pose] = { ...next[pose], status: "done" };
+        } else {
+          failedPoses.push(pose);
+          next[pose] = { ...next[pose], status: "error" };
+        }
+      });
+      return next;
+    });
+
+    if (failedPoses.length > 0) {
+      const labels = failedPoses.map((p) => POSE_LABEL[p]).join(", ");
+      toast.error(`Upload failed for: ${labels}. Click Upload again to retry.`);
+      setSubmitting(false);
+      return;
+    }
+
+    const items = Array.from(uploadedItemsRef.current.values());
+    const taken = new Date(values.takenAt);
 
     try {
-      setProgress(10);
-      const presign = await api.photos.presign({
-        contentType: selected.type as (typeof ALLOWED_CONTENT_TYPES)[number],
-        bytes: selected.size,
-      });
-      setProgress(30);
-      const putRes = await fetch(presign.uploadUrl, {
-        method: "PUT",
-        headers: { "content-type": selected.type },
-        body: selected,
-      });
-      if (!putRes.ok) throw new Error("S3 upload failed");
-      setProgress(70);
-
-      const dims = await readImageDimensions(selected).catch(() => null);
-      const taken = new Date(values.takenAt);
-
-      await api.photos.confirm({
-        s3Key: presign.s3Key,
-        contentType: selected.type as (typeof ALLOWED_CONTENT_TYPES)[number],
-        bytes: selected.size,
-        width: dims?.width,
-        height: dims?.height,
+      await api.photos.confirmSet({
+        photoSetId,
         takenAt: taken.toISOString(),
         weekStartDate: isoWeekStart(taken),
         bodyWeightKg: values.bodyWeightKg ?? undefined,
         bodyFatPct: values.bodyFatPct ?? undefined,
         notes: values.notes || undefined,
+        photos: items,
       });
-      setProgress(100);
-      toast.success("Photo uploaded");
+      toast.success(`Uploaded ${items.length} photo${items.length === 1 ? "" : "s"}`);
       reset();
       onClose();
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Upload failed");
+      toast.error(err instanceof ApiError ? err.message : "Could not save photo set");
     } finally {
-      setProgress(0);
+      setSubmitting(false);
     }
   };
 
+  const uploadOne = async (pose: PhotoPose): Promise<ConfirmPhotoSetItem> => {
+    const cached = uploadedItemsRef.current.get(pose);
+    if (cached) return cached;
+
+    const slot = slots[pose];
+    const file = slot.file;
+    if (!file) throw new Error("Missing file");
+
+    const contentType = file.type as AllowedContentType;
+    const presign = await api.photos.presign({ contentType, bytes: file.size });
+    const putRes = await fetch(presign.uploadUrl, {
+      method: "PUT",
+      headers: { "content-type": contentType },
+      body: file,
+    });
+    if (!putRes.ok) throw new Error("S3 upload failed");
+
+    const dims = await readImageDimensions(file).catch(() => null);
+
+    return {
+      s3Key: presign.s3Key,
+      contentType,
+      bytes: file.size,
+      width: dims?.width,
+      height: dims?.height,
+      pose,
+    };
+  };
+
   const reset = () => {
-    setFile(null);
-    setProgress(0);
+    setSlots((prev) => {
+      for (const pose of PHOTO_POSES) {
+        const url = prev[pose].preview;
+        if (url) URL.revokeObjectURL(url);
+      }
+      return {
+        FRONT: initialSlotState(),
+        LEFT: initialSlotState(),
+        BACK: initialSlotState(),
+        RIGHT: initialSlotState(),
+      };
+    });
+    photoSetIdRef.current = null;
+    uploadedItemsRef.current.clear();
+    setSubmitting(false);
     form.reset();
-    if (fileRef.current) fileRef.current.value = "";
   };
 
   const handleClose = () => {
-    if (progress > 0 && progress < 100) return;
+    if (submitting) return;
     reset();
     onClose();
   };
@@ -121,14 +234,14 @@ export function UploadPhotoButton() {
   return (
     <>
       <Button color="primary" onPress={onOpen}>
-        Upload photo
+        Upload photos
       </Button>
       <StandardModal
         isOpen={isOpen}
         onClose={handleClose}
-        size="md"
-        title="Upload progress photo"
-        bodyClassName="flex flex-col gap-3"
+        size="2xl"
+        title="Upload progress photo set"
+        bodyClassName="flex flex-col gap-4"
         contentWrapper={(c) => (
           <FormRoot form={form} className="contents">
             {c}
@@ -136,35 +249,20 @@ export function UploadPhotoButton() {
         )}
         footer={
           <>
-            <Button variant="light" onPress={handleClose} isDisabled={progress > 0 && progress < 100}>
+            <Button variant="light" onPress={handleClose} isDisabled={submitting}>
               Cancel
             </Button>
             <Button
               color="primary"
               type="submit"
-              isLoading={progress > 0 && progress < 100}
-              isDisabled={!file}
+              isLoading={submitting}
+              isDisabled={filledCount === 0}
             >
-              Upload
+              Upload {filledCount > 0 ? `(${filledCount})` : ""}
             </Button>
           </>
         }
       >
-        <div>
-          <label className="mb-1 block text-sm font-medium">Photo</label>
-          <input
-            ref={fileRef}
-            type="file"
-            accept={ALLOWED_CONTENT_TYPES.join(",")}
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-default-600 file:mr-3 file:rounded-medium file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
-          />
-          {file && (
-            <p className="mt-1 text-xs text-default-500">
-              {file.name} · {(file.size / 1024 / 1024).toFixed(2)} MB
-            </p>
-          )}
-        </div>
         <Input
           label="Date taken"
           type="date"
@@ -195,16 +293,95 @@ export function UploadPhotoButton() {
           label="Notes"
           placeholder="Optional"
         />
-        {progress > 0 && (
-          <Progress
-            value={progress}
-            color="primary"
-            size="sm"
-            aria-label="Upload progress"
-          />
-        )}
+        <div>
+          <p className="mb-2 text-sm font-medium">Photos by pose</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {PHOTO_POSES.map((pose) => (
+              <PoseSlot
+                key={pose}
+                pose={pose}
+                slot={slots[pose]}
+                onSelect={(file) => handleFileChange(pose, file)}
+                disabled={submitting}
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-default-500">
+            At least one pose. Empty slots can stay blank.
+          </p>
+        </div>
       </StandardModal>
     </>
+  );
+}
+
+interface PoseSlotProps {
+  pose: PhotoPose;
+  slot: SlotState;
+  onSelect: (file: File | null) => void;
+  disabled: boolean;
+}
+
+function PoseSlot({ pose, slot, onSelect, disabled }: PoseSlotProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const openPicker = () => inputRef.current?.click();
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-default-700">{POSE_LABEL[pose]}</span>
+        <StatusBadge status={slot.status} />
+      </div>
+      <button
+        type="button"
+        onClick={openPicker}
+        disabled={disabled}
+        className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-medium border border-dashed border-default-300 bg-default-50 text-xs text-default-500 transition-colors hover:border-primary disabled:opacity-60"
+      >
+        {slot.preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={slot.preview} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span>Tap to choose</span>
+        )}
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ALLOWED_CONTENT_TYPES.join(",")}
+        className="hidden"
+        onChange={(e) => onSelect(e.target.files?.[0] ?? null)}
+      />
+      {slot.file && (
+        <div className="flex items-center justify-between gap-1">
+          <span className="truncate text-[11px] text-default-500">
+            {(slot.file.size / 1024 / 1024).toFixed(2)} MB
+          </span>
+          <Button
+            size="sm"
+            variant="light"
+            onPress={() => onSelect(null)}
+            isDisabled={disabled}
+          >
+            Remove
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: SlotState["status"] }) {
+  if (status === "idle") return null;
+  const map: Record<Exclude<SlotState["status"], "idle">, { label: string; cls: string }> = {
+    uploading: { label: "Uploading…", cls: "bg-primary/10 text-primary" },
+    done: { label: "Sent", cls: "bg-success/10 text-success" },
+    error: { label: "Failed", cls: "bg-danger/10 text-danger" },
+  };
+  const { label, cls } = map[status];
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${cls}`}>{label}</span>
   );
 }
 

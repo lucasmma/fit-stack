@@ -162,6 +162,8 @@ export function mapPhotoRow(row: ProgressPhoto) {
     width: row.width,
     height: row.height,
     s3Key: row.s3Key,
+    pose: row.pose,
+    photoSetId: row.photoSetId,
   };
 }
 

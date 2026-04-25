@@ -33,6 +33,7 @@ import type {
   PresignInput,
   PresignDTO,
   ConfirmPhotoInput,
+  ConfirmPhotoSetInput,
   PhotoDTO,
 } from "./schemas/photo";
 import type { CreateShareLinkInput, ShareLinkDTO } from "./schemas/share";
@@ -187,6 +188,8 @@ export const api = {
       request<PresignDTO>("/api/photos/presign", { method: "POST", json: input }),
     confirm: (input: ConfirmPhotoInput) =>
       request<PhotoDTO>("/api/photos/confirm", { method: "POST", json: input }),
+    confirmSet: (input: ConfirmPhotoSetInput) =>
+      request<PhotoDTO[]>("/api/photos/sets", { method: "POST", json: input }),
     delete: (id: string) => request<void>(`/api/photos/${id}`, { method: "DELETE" }),
   },
   shareLinks: {

@@ -8,6 +8,7 @@ import type {
   PresignInput,
   PresignDTO,
   ConfirmPhotoInput,
+  ConfirmPhotoSetInput,
 } from "@/lib/schemas/photo";
 
 type ListQuery = { from?: string; to?: string };
@@ -33,6 +34,9 @@ export class PhotoController {
 
   confirm: Handler<ConfirmPhotoInput, unknown, unknown, PhotoDTO> = async (req) =>
     created(await this.data.confirm(req.auth.userId, req.body));
+
+  confirmSet: Handler<ConfirmPhotoSetInput, unknown, unknown, PhotoDTO[]> = async (req) =>
+    created(await this.data.confirmSet(req.auth.userId, req.body));
 
   delete: Handler<unknown, unknown, IdParams, null> = async (req) => {
     await this.data.delete(req.params.id, req.auth.userId);

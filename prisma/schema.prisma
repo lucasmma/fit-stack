@@ -182,24 +182,35 @@ model SessionSet {
   @@map("session_sets")
 }
 
+enum PhotoPose {
+  FRONT
+  LEFT
+  BACK
+  RIGHT
+}
+
 model ProgressPhoto {
-  id            String   @id @default(uuid()) @db.Uuid
-  userId        String   @db.Uuid
-  user          Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String     @id @default(uuid()) @db.Uuid
+  userId        String     @db.Uuid
+  user          Profile    @relation(fields: [userId], references: [id], onDelete: Cascade)
   s3Key         String
   contentType   String
   width         Int?
   height        Int?
   bytes         Int?
   takenAt       DateTime
-  weekStartDate DateTime @db.Date
-  bodyWeightKg  Decimal? @db.Decimal(5, 2)
-  bodyFatPct    Decimal? @db.Decimal(4, 1)
+  weekStartDate DateTime   @db.Date
+  bodyWeightKg  Decimal?   @db.Decimal(5, 2)
+  bodyFatPct    Decimal?   @db.Decimal(4, 1)
   notes         String?
-  createdAt     DateTime @default(now())
+  pose          PhotoPose?
+  photoSetId    String?    @db.Uuid
+  createdAt     DateTime   @default(now())
 
+  @@unique([photoSetId, pose])
   @@index([userId, takenAt])
   @@index([userId, weekStartDate])
+  @@index([userId, photoSetId])
   @@map("progress_photos")
 }
 

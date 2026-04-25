@@ -5,7 +5,7 @@ import { Card, Button, useDisclosure } from "@heroui/react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { useState } from "react";
-import type { PhotoDTO } from "@/lib/schemas/photo";
+import { POSE_LABEL, type PhotoDTO } from "@/lib/schemas/photo";
 import { api, ApiError } from "@/lib/api-client";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -49,6 +49,11 @@ export function PhotoTile({ photo, onOpen, onDeleted }: PhotoTileProps) {
           className="object-cover transition-transform duration-200 group-hover:scale-[1.02]"
           unoptimized
         />
+        {photo.pose && (
+          <span className="absolute left-2 top-2 rounded-full bg-default-900/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+            {POSE_LABEL[photo.pose]}
+          </span>
+        )}
       </button>
       <div className="flex items-center justify-between gap-2 px-2 py-2 text-xs">
         <span className="text-default-600">{format(parseISO(photo.takenAt), "MMM d")}</span>

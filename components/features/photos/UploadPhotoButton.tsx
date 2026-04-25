@@ -18,6 +18,7 @@ import { FormRoot } from "@/components/forms/FormRoot";
 import { TextAreaField, NumberField } from "@/components/forms/Field";
 import { api, ApiError } from "@/lib/api-client";
 import { isoWeekStart } from "@/lib/utils/week-start";
+import { compressImage } from "@/lib/utils/image-compress";
 import { StandardModal } from "@/components/ui/StandardModal";
 
 const uploadSchema = z.object({
@@ -185,23 +186,25 @@ export function UploadPhotoButton() {
     const file = slot.file;
     if (!file) throw new Error("Missing file");
 
-    const contentType = file.type as AllowedContentType;
-    const presign = await api.photos.presign({ contentType, bytes: file.size });
+    const compressed = await compressImage(file);
+
+    const presign = await api.photos.presign({
+      contentType: compressed.type,
+      bytes: compressed.blob.size,
+    });
     const putRes = await fetch(presign.uploadUrl, {
       method: "PUT",
-      headers: { "content-type": contentType },
-      body: file,
+      headers: { "content-type": compressed.type },
+      body: compressed.blob,
     });
     if (!putRes.ok) throw new Error("S3 upload failed");
 
-    const dims = await readImageDimensions(file).catch(() => null);
-
     return {
       s3Key: presign.s3Key,
-      contentType,
-      bytes: file.size,
-      width: dims?.width,
-      height: dims?.height,
+      contentType: compressed.type,
+      bytes: compressed.blob.size,
+      width: compressed.width,
+      height: compressed.height,
       pose,
     };
   };
@@ -386,20 +389,3 @@ function StatusBadge({ status }: { status: SlotState["status"] }) {
   );
 }
 
-async function readImageDimensions(
-  file: File,
-): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-      URL.revokeObjectURL(url);
-    };
-    img.onerror = () => {
-      reject(new Error("Could not read image"));
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
-  });
-}

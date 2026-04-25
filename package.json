@@ -14,7 +14,7 @@
     "prebuild": "prisma generate && prisma migrate deploy",
     "postinstall": "prisma generate",
     "seed:user": "tsx --env-file=.env src/server/scripts/seed-user.ts",
-    "seed:catalog": "tsx prisma/seed.ts",
+    "seed:catalog": "tsx prisma/seed-exercises.ts",
     "seed:plan": "tsx --env-file=.env prisma/seed-plan.ts",
     "format": "prettier --write ."
   },

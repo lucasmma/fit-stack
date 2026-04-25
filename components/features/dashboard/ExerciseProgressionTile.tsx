@@ -3,22 +3,35 @@
 import { useEffect, useState } from "react";
 import { Select, SelectItem } from "@heroui/react";
 import { format, parseISO } from "date-fns";
-import type { ExerciseDTO } from "@/lib/schemas/exercise";
 import { ChartCard } from "@/components/charts/ChartCard";
 import { LineSeriesChart } from "@/components/charts/LineSeriesChart";
 import { EmptyChart } from "@/components/charts/EmptyChart";
 import { api } from "@/lib/api-client";
 
-export function ExerciseProgressionTile({ exercises }: { exercises: ExerciseDTO[] }) {
+type ProgressionPoint = { date: string; topWeight: number; estimatedOneRm: number };
+
+interface ExerciseProgressionTileProps {
+  exercises: Array<{ id: string; name: string }>;
+  prefetched?: Record<string, ProgressionPoint[]>;
+}
+
+export function ExerciseProgressionTile({
+  exercises,
+  prefetched,
+}: ExerciseProgressionTileProps) {
   const [selected, setSelected] = useState<string | null>(exercises[0]?.id ?? null);
-  const [data, setData] = useState<
-    Array<{ date: string; topWeight: number; estimatedOneRm: number }>
-  >([]);
+  const [data, setData] = useState<ProgressionPoint[]>(
+    prefetched && exercises[0] ? prefetched[exercises[0].id] ?? [] : [],
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!selected) {
       setData([]);
+      return;
+    }
+    if (prefetched) {
+      setData(prefetched[selected] ?? []);
       return;
     }
     let cancelled = false;
@@ -37,7 +50,7 @@ export function ExerciseProgressionTile({ exercises }: { exercises: ExerciseDTO[
     return () => {
       cancelled = true;
     };
-  }, [selected]);
+  }, [selected, prefetched]);
 
   const points = data.map((d) => ({
     x: format(parseISO(d.date), "MMM d"),

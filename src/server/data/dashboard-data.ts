@@ -6,6 +6,11 @@ import { toNumber } from "@/lib/utils/decimal";
 type VolumePoint = { weekStart: string; volume: number; sessions: number };
 type ProgressionPoint = { date: string; topWeight: number; estimatedOneRm: number };
 type PrRow = { exerciseId: string; exerciseName: string; weight: number; date: string };
+type ProgressionForExercise = {
+  exerciseId: string;
+  exerciseName: string;
+  points: ProgressionPoint[];
+};
 
 export class DashboardData {
   constructor(private readonly prisma: PrismaClient) {}
@@ -93,6 +98,36 @@ export class DashboardData {
       topWeight: Math.round(v.top * 100) / 100,
       estimatedOneRm: Math.round(v.oneRm * 100) / 100,
     }));
+  }
+
+  async progressionForUser(userId: string): Promise<ProgressionForExercise[]> {
+    const exercises = await this.prisma.sessionExercise.findMany({
+      where: {
+        session: { userId, finishedAt: { not: null } },
+        sets: {
+          some: {
+            completed: true,
+            type: "WORKING" satisfies SetType,
+            reps: { not: null },
+            weight: { not: null },
+          },
+        },
+      },
+      select: { exerciseId: true, exercise: { select: { name: true } } },
+      distinct: ["exerciseId"],
+    });
+
+    const results = await Promise.all(
+      exercises.map(async (e) => ({
+        exerciseId: e.exerciseId,
+        exerciseName: e.exercise.name,
+        points: await this.exerciseProgression(userId, e.exerciseId),
+      })),
+    );
+
+    return results
+      .filter((r) => r.points.length > 0)
+      .sort((a, b) => a.exerciseName.localeCompare(b.exerciseName));
   }
 
   async recentPrs(userId: string, limit: number): Promise<PrRow[]> {

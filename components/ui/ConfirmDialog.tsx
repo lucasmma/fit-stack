@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-} from "@heroui/react";
+import { Button } from "@heroui/react";
+import { StandardModal } from "./StandardModal";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -33,13 +27,13 @@ export function ConfirmDialog({
   isLoading,
 }: ConfirmDialogProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="sm">
-      <ModalContent>
-        <ModalHeader>{title}</ModalHeader>
-        <ModalBody>
-          <p className="text-sm text-default-600">{message}</p>
-        </ModalBody>
-        <ModalFooter>
+    <StandardModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="sm"
+      title={title}
+      footer={
+        <>
           <Button variant="light" onPress={onClose} isDisabled={isLoading}>
             {cancelLabel}
           </Button>
@@ -50,8 +44,10 @@ export function ConfirmDialog({
           >
             {confirmLabel}
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </>
+      }
+    >
+      <p className="text-sm text-default-600">{message}</p>
+    </StandardModal>
   );
 }

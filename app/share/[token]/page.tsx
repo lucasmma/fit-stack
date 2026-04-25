@@ -23,18 +23,20 @@ export default async function PublicSharePage({
   const includeProgress = link.scope === "PROGRESS_ONLY" || link.scope === "ALL";
   const includeWorkouts = link.scope === "WORKOUTS_ONLY" || link.scope === "ALL";
 
-  const [volume, prs, bodyWeight, photos, sessions, activePlan] = await Promise.all([
-    includeProgress ? makeDashboardData().volumeByWeek(link.userId, 12) : null,
-    includeProgress ? makeDashboardData().recentPrs(link.userId, 5) : null,
-    includeProgress ? makeDashboardData().bodyWeightTrend(link.userId) : null,
-    includeProgress ? makePhotoData().list(link.userId) : null,
-    includeWorkouts
-      ? makeSessionData()
-          .list(link.userId)
-          .then((s) => s.slice(0, 20))
-      : null,
-    includeWorkouts ? makePlanData().getActive(link.userId) : null,
-  ]);
+  const [volume, prs, bodyWeight, photos, exerciseProgressions, sessions, activePlan] =
+    await Promise.all([
+      includeProgress ? makeDashboardData().volumeByWeek(link.userId, 12) : null,
+      includeProgress ? makeDashboardData().recentPrs(link.userId, 5) : null,
+      includeProgress ? makeDashboardData().bodyWeightTrend(link.userId) : null,
+      includeProgress ? makePhotoData().list(link.userId) : null,
+      includeProgress ? makeDashboardData().progressionForUser(link.userId) : null,
+      includeWorkouts
+        ? makeSessionData()
+            .list(link.userId)
+            .then((s) => s.slice(0, 20))
+        : null,
+      includeWorkouts ? makePlanData().getActive(link.userId) : null,
+    ]);
 
   return (
     <SharePage
@@ -47,6 +49,7 @@ export default async function PublicSharePage({
               prs: prs ?? [],
               bodyWeight: bodyWeight ?? [],
               photos: photos ?? [],
+              exerciseProgressions: exerciseProgressions ?? [],
             }
           : null
       }

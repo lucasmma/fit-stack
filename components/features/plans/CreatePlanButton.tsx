@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-} from "@heroui/react";
+import { Button, useDisclosure } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useZodForm } from "@/lib/hooks/use-zod-form";
@@ -17,6 +9,7 @@ import { CreatePlanInputSchema, type CreatePlanInput } from "@/lib/schemas/plan"
 import { api } from "@/lib/api-client";
 import { FormRoot } from "@/components/forms/FormRoot";
 import { TextField, TextAreaField } from "@/components/forms/Field";
+import { StandardModal } from "@/components/ui/StandardModal";
 
 export function CreatePlanButton() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -33,8 +26,8 @@ export function CreatePlanButton() {
         toast.success("Plan created");
         onClose();
         form.reset();
-        router.push(`/plans/${plan.id}`);
         router.refresh();
+        router.push(`/plans/${plan.id}`);
       } finally {
         setSubmitting(false);
       }
@@ -43,41 +36,44 @@ export function CreatePlanButton() {
 
   return (
     <>
-      <Button color="primary" onPress={() => {
-        console.log("open")
-        onOpen();
-      }}>
+      <Button color="primary" onPress={onOpen}>
         New plan
       </Button>
-      <Modal isOpen={isOpen} onClose={onClose} size="md">
-        <ModalContent>
-          <ModalHeader>New plan</ModalHeader>
+      <StandardModal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="md"
+        title="New plan"
+        bodyClassName="flex flex-col gap-3"
+        contentWrapper={(c) => (
           <FormRoot form={form} className="contents">
-            <ModalBody className="flex flex-col gap-3">
-              <TextField<CreatePlanInput>
-                name="name"
-                label="Plan name"
-                placeholder="e.g. PPL, Upper/Lower"
-                isRequired
-                autoFocus
-              />
-              <TextAreaField<CreatePlanInput>
-                name="description"
-                label="Description"
-                placeholder="Optional notes about this plan"
-              />
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onClose} isDisabled={submitting}>
-                Cancel
-              </Button>
-              <Button color="primary" type="submit" isLoading={submitting}>
-                Create
-              </Button>
-            </ModalFooter>
+            {c}
           </FormRoot>
-        </ModalContent>
-      </Modal>
+        )}
+        footer={
+          <>
+            <Button variant="light" onPress={onClose} isDisabled={submitting}>
+              Cancel
+            </Button>
+            <Button color="primary" type="submit" isLoading={submitting}>
+              Create
+            </Button>
+          </>
+        }
+      >
+        <TextField<CreatePlanInput>
+          name="name"
+          label="Plan name"
+          placeholder="e.g. PPL, Upper/Lower"
+          isRequired
+          autoFocus
+        />
+        <TextAreaField<CreatePlanInput>
+          name="description"
+          label="Description"
+          placeholder="Optional notes about this plan"
+        />
+      </StandardModal>
     </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Card, Button, useDisclosure } from "@heroui/react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -40,12 +41,13 @@ export function PhotoTile({ photo, onOpen, onDeleted }: PhotoTileProps) {
         className="group relative block aspect-[3/4] w-full"
         aria-label={`View photo from ${format(parseISO(photo.takenAt), "PPP")}`}
       >
-        {/* Presigned URL — cannot use next/image without remotePatterns; keep <img>. */}
-        <img
+        <Image
           src={photo.url}
           alt=""
-          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
-          loading="lazy"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
+          className="object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+          unoptimized
         />
       </button>
       <div className="flex items-center justify-between gap-2 px-2 py-2 text-xs">

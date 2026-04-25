@@ -3,11 +3,6 @@
 import { useRef, useState } from "react";
 import {
   Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Input,
   useDisclosure,
   Progress,
@@ -21,6 +16,7 @@ import { FormRoot } from "@/components/forms/FormRoot";
 import { TextAreaField, NumberField } from "@/components/forms/Field";
 import { api, ApiError } from "@/lib/api-client";
 import { isoWeekStart } from "@/lib/utils/week-start";
+import { StandardModal } from "@/components/ui/StandardModal";
 
 const uploadSchema = z.object({
   takenAt: z.string().min(1, "Date is required"),
@@ -127,81 +123,87 @@ export function UploadPhotoButton() {
       <Button color="primary" onPress={onOpen}>
         Upload photo
       </Button>
-      <Modal isOpen={isOpen} onClose={handleClose} size="md">
-        <ModalContent>
-          <ModalHeader>Upload progress photo</ModalHeader>
+      <StandardModal
+        isOpen={isOpen}
+        onClose={handleClose}
+        size="md"
+        title="Upload progress photo"
+        bodyClassName="flex flex-col gap-3"
+        contentWrapper={(c) => (
           <FormRoot form={form} className="contents">
-            <ModalBody className="flex flex-col gap-3">
-              <div>
-                <label className="mb-1 block text-sm font-medium">Photo</label>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept={ALLOWED_CONTENT_TYPES.join(",")}
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  className="block w-full text-sm text-default-600 file:mr-3 file:rounded-medium file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
-                />
-                {file && (
-                  <p className="mt-1 text-xs text-default-500">
-                    {file.name} · {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                )}
-              </div>
-              <Input
-                label="Date taken"
-                type="date"
-                variant="bordered"
-                value={form.watch("takenAt") as string}
-                onChange={(e) => form.setValue("takenAt", e.target.value)}
-                isInvalid={!!form.formState.errors.takenAt}
-                errorMessage={form.formState.errors.takenAt?.message}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <NumberField<UploadInput>
-                  name="bodyWeightKg"
-                  label="Body weight"
-                  step={0.1}
-                  min={0}
-                  max={999}
-                />
-                <NumberField<UploadInput>
-                  name="bodyFatPct"
-                  label="Body fat %"
-                  step={0.1}
-                  min={0}
-                  max={100}
-                />
-              </div>
-              <TextAreaField<UploadInput>
-                name="notes"
-                label="Notes"
-                placeholder="Optional"
-              />
-              {progress > 0 && (
-                <Progress
-                  value={progress}
-                  color="primary"
-                  size="sm"
-                  aria-label="Upload progress"
-                />
-              )}
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={handleClose} isDisabled={progress > 0 && progress < 100}>
-                Cancel
-              </Button>
-              <Button
-                color="primary"
-                type="submit"
-                isLoading={progress > 0 && progress < 100}
-                isDisabled={!file}
-              >
-                Upload
-              </Button>
-            </ModalFooter>
+            {c}
           </FormRoot>
-        </ModalContent>
-      </Modal>
+        )}
+        footer={
+          <>
+            <Button variant="light" onPress={handleClose} isDisabled={progress > 0 && progress < 100}>
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              type="submit"
+              isLoading={progress > 0 && progress < 100}
+              isDisabled={!file}
+            >
+              Upload
+            </Button>
+          </>
+        }
+      >
+        <div>
+          <label className="mb-1 block text-sm font-medium">Photo</label>
+          <input
+            ref={fileRef}
+            type="file"
+            accept={ALLOWED_CONTENT_TYPES.join(",")}
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="block w-full text-sm text-default-600 file:mr-3 file:rounded-medium file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+          />
+          {file && (
+            <p className="mt-1 text-xs text-default-500">
+              {file.name} · {(file.size / 1024 / 1024).toFixed(2)} MB
+            </p>
+          )}
+        </div>
+        <Input
+          label="Date taken"
+          type="date"
+          variant="bordered"
+          value={form.watch("takenAt") as string}
+          onChange={(e) => form.setValue("takenAt", e.target.value)}
+          isInvalid={!!form.formState.errors.takenAt}
+          errorMessage={form.formState.errors.takenAt?.message}
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <NumberField<UploadInput>
+            name="bodyWeightKg"
+            label="Body weight"
+            step={0.1}
+            min={0}
+            max={999}
+          />
+          <NumberField<UploadInput>
+            name="bodyFatPct"
+            label="Body fat %"
+            step={0.1}
+            min={0}
+            max={100}
+          />
+        </div>
+        <TextAreaField<UploadInput>
+          name="notes"
+          label="Notes"
+          placeholder="Optional"
+        />
+        {progress > 0 && (
+          <Progress
+            value={progress}
+            color="primary"
+            size="sm"
+            aria-label="Upload progress"
+          />
+        )}
+      </StandardModal>
     </>
   );
 }

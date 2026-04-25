@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Card, CardBody, Chip } from "@heroui/react";
 import { format, parseISO } from "date-fns";
 import type { PhotoDTO } from "@/lib/schemas/photo";
@@ -9,6 +10,9 @@ import { VolumeTile } from "@/components/features/dashboard/VolumeTile";
 import { SessionsTile } from "@/components/features/dashboard/SessionsTile";
 import { PrsTile } from "@/components/features/dashboard/PrsTile";
 import { BodyWeightTile } from "@/components/features/dashboard/BodyWeightTile";
+import { ExerciseProgressionTile } from "@/components/features/dashboard/ExerciseProgressionTile";
+
+type ProgressionPoint = { date: string; topWeight: number; estimatedOneRm: number };
 
 interface SharePageProps {
   name: string | null;
@@ -18,6 +22,11 @@ interface SharePageProps {
     prs: Array<{ exerciseId: string; exerciseName: string; weight: number; date: string }>;
     bodyWeight: Array<{ date: string; bodyWeightKg: number }>;
     photos: PhotoDTO[];
+    exerciseProgressions: Array<{
+      exerciseId: string;
+      exerciseName: string;
+      points: ProgressionPoint[];
+    }>;
   } | null;
   workouts: {
     sessions: SessionSummaryDTO[];
@@ -26,6 +35,16 @@ interface SharePageProps {
 }
 
 export function SharePage({ name, scope, progress, workouts }: SharePageProps) {
+  const progressionExercises =
+    progress?.exerciseProgressions.map((p) => ({
+      id: p.exerciseId,
+      name: p.exerciseName,
+    })) ?? [];
+  const progressionPrefetched: Record<string, ProgressionPoint[]> = {};
+  for (const p of progress?.exerciseProgressions ?? []) {
+    progressionPrefetched[p.exerciseId] = p.points;
+  }
+
   return (
     <div className="min-h-screen bg-default-50 px-4 py-10">
       <div className="mx-auto max-w-5xl">
@@ -51,6 +70,12 @@ export function SharePage({ name, scope, progress, workouts }: SharePageProps) {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <SessionsTile data={progress.volume} />
               <VolumeTile data={progress.volume} />
+              {progressionExercises.length > 0 && (
+                <ExerciseProgressionTile
+                  exercises={progressionExercises}
+                  prefetched={progressionPrefetched}
+                />
+              )}
               <BodyWeightTile data={progress.bodyWeight} />
               <PrsTile prs={progress.prs} />
             </div>
@@ -62,13 +87,15 @@ export function SharePage({ name, scope, progress, workouts }: SharePageProps) {
                   {progress.photos.slice(0, 12).map((photo) => (
                     <div
                       key={photo.id}
-                      className="aspect-[3/4] overflow-hidden rounded-medium border border-default-200"
+                      className="relative aspect-[3/4] overflow-hidden rounded-medium border border-default-200"
                     >
-                      <img
+                      <Image
                         src={photo.url}
                         alt=""
-                        className="h-full w-full object-cover"
-                        loading="lazy"
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 25vw, 16vw"
+                        className="object-cover"
+                        unoptimized
                       />
                     </div>
                   ))}

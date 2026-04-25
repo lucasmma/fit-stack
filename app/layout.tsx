@@ -5,6 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "fit-stack",
   description: "Track your plans, workouts, sessions, and progress — all in one place.",
+  icons: { icon: "/icon.svg" },
 };
 
 export const viewport: Viewport = {

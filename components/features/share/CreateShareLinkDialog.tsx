@@ -1,11 +1,6 @@
 "use client";
 
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Button,
   Select,
   SelectItem,
@@ -14,6 +9,7 @@ import {
 import { useState } from "react";
 import type { CreateShareLinkInput, ShareScope } from "@/lib/schemas/share";
 import { SHARE_SCOPE_LABEL } from "@/lib/schemas/share";
+import { StandardModal } from "@/components/ui/StandardModal";
 
 interface CreateShareLinkDialogProps {
   isOpen: boolean;
@@ -48,48 +44,51 @@ export function CreateShareLinkDialog({ isOpen, onClose, onCreate }: CreateShare
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
-      <ModalContent>
-        <ModalHeader>New share link</ModalHeader>
-        <ModalBody className="flex flex-col gap-3">
-          <Input
-            label="Label"
-            placeholder="e.g. Coach John"
-            variant="bordered"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <Select
-            label="Scope"
-            variant="bordered"
-            selectedKeys={new Set([scope])}
-            onSelectionChange={(keys) => {
-              const next = Array.from(keys as Set<ShareScope>)[0];
-              if (next) setScope(next);
-            }}
-          >
-            {SCOPE_OPTIONS.map((o) => (
-              <SelectItem key={o.value}>{o.label}</SelectItem>
-            ))}
-          </Select>
-          <Input
-            label="Expires"
-            type="date"
-            variant="bordered"
-            description="Optional. Leave empty for no expiry."
-            value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
-          />
-        </ModalBody>
-        <ModalFooter>
+    <StandardModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      title="New share link"
+      bodyClassName="flex flex-col gap-3"
+      footer={
+        <>
           <Button variant="light" onPress={onClose} isDisabled={submitting}>
             Cancel
           </Button>
           <Button color="primary" onPress={submit} isLoading={submitting}>
             Create
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </>
+      }
+    >
+      <Input
+        label="Label"
+        placeholder="e.g. Coach John"
+        variant="bordered"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <Select
+        label="Scope"
+        variant="bordered"
+        selectedKeys={new Set([scope])}
+        onSelectionChange={(keys) => {
+          const next = Array.from(keys as Set<ShareScope>)[0];
+          if (next) setScope(next);
+        }}
+      >
+        {SCOPE_OPTIONS.map((o) => (
+          <SelectItem key={o.value}>{o.label}</SelectItem>
+        ))}
+      </Select>
+      <Input
+        label="Expires"
+        type="date"
+        variant="bordered"
+        description="Optional. Leave empty for no expiry."
+        value={expiresAt}
+        onChange={(e) => setExpiresAt(e.target.value)}
+      />
+    </StandardModal>
   );
 }

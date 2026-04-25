@@ -3,11 +3,6 @@
 import { useState } from "react";
 import {
   Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Select,
   SelectItem,
   useDisclosure,
@@ -15,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api-client";
+import { StandardModal } from "@/components/ui/StandardModal";
 
 interface PlanOption {
   id: string;
@@ -71,47 +67,14 @@ export function StartSessionButton({ plans, defaultPlanId }: StartSessionButtonP
       <Button color="primary" onPress={onOpen}>
         Start session
       </Button>
-      <Modal isOpen={isOpen} onClose={handleClose} size="md">
-        <ModalContent>
-          <ModalHeader>Start a session</ModalHeader>
-          <ModalBody className="flex flex-col gap-4">
-            <Select
-              label="Plan"
-              variant="bordered"
-              selectedKeys={planId ? new Set([planId]) : new Set()}
-              onSelectionChange={(keys) => {
-                const next = Array.from(keys as Set<string>)[0];
-                setPlanId(next ?? null);
-                setWorkoutId(null);
-              }}
-              isRequired
-            >
-              {plans.map((plan) => (
-                <SelectItem
-                  key={plan.id}
-                  description={plan.isActive ? "Active" : undefined}
-                >
-                  {plan.name}
-                </SelectItem>
-              ))}
-            </Select>
-            <Select
-              label="Workout"
-              variant="bordered"
-              selectedKeys={workoutId ? new Set([workoutId]) : new Set()}
-              onSelectionChange={(keys) => {
-                const next = Array.from(keys as Set<string>)[0];
-                setWorkoutId(next ?? null);
-              }}
-              isDisabled={!selectedPlan}
-              isRequired
-            >
-              {(selectedPlan?.workouts ?? []).map((w) => (
-                <SelectItem key={w.id}>{w.name}</SelectItem>
-              ))}
-            </Select>
-          </ModalBody>
-          <ModalFooter>
+      <StandardModal
+        isOpen={isOpen}
+        onClose={handleClose}
+        size="md"
+        title="Start a session"
+        bodyClassName="flex flex-col gap-4"
+        footer={
+          <>
             <Button variant="light" onPress={handleClose} isDisabled={starting}>
               Cancel
             </Button>
@@ -123,9 +86,45 @@ export function StartSessionButton({ plans, defaultPlanId }: StartSessionButtonP
             >
               Start
             </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </>
+        }
+      >
+        <Select
+          label="Plan"
+          variant="bordered"
+          selectedKeys={planId ? new Set([planId]) : new Set()}
+          onSelectionChange={(keys) => {
+            const next = Array.from(keys as Set<string>)[0];
+            setPlanId(next ?? null);
+            setWorkoutId(null);
+          }}
+          isRequired
+        >
+          {plans.map((plan) => (
+            <SelectItem
+              key={plan.id}
+              description={plan.isActive ? "Active" : undefined}
+            >
+              {plan.name}
+            </SelectItem>
+          ))}
+        </Select>
+        <Select
+          label="Workout"
+          variant="bordered"
+          selectedKeys={workoutId ? new Set([workoutId]) : new Set()}
+          onSelectionChange={(keys) => {
+            const next = Array.from(keys as Set<string>)[0];
+            setWorkoutId(next ?? null);
+          }}
+          isDisabled={!selectedPlan}
+          isRequired
+        >
+          {(selectedPlan?.workouts ?? []).map((w) => (
+            <SelectItem key={w.id}>{w.name}</SelectItem>
+          ))}
+        </Select>
+      </StandardModal>
     </>
   );
 }

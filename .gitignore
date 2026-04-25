@@ -39,3 +39,6 @@ prisma/dev.db-journal
 # Misc
 *.log
 .turbo/
+
+#build
+*.tsbuildinfo

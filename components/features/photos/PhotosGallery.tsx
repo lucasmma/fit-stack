@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { PHOTO_POSES, POSE_LABEL, type PhotoDTO, type PhotoPose } from "@/lib/schemas/photo";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -20,6 +20,10 @@ type WeekBucket = {
 export function PhotosGallery({ initialPhotos }: PhotosGalleryProps) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [lightbox, setLightbox] = useState<PhotoDTO | null>(null);
+
+  useEffect(() => {
+    setPhotos(initialPhotos);
+  }, [initialPhotos]);
 
   const weeks = useMemo<WeekBucket[]>(() => {
     const byWeek = new Map<string, WeekBucket>();

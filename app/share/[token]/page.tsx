@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
-import { makeShareData } from "@/server/factories/share-factory";
-import { makeSessionData } from "@/server/factories/session-factory";
-import { makeDashboardData } from "@/server/factories/dashboard-factory";
-import { makePhotoData } from "@/server/factories/photo-factory";
-import { makePlanData } from "@/server/factories/plan-factory";
-import { SharePage } from "@/components/features/share/SharePage";
+import { makeShareData } from "@/server/modules/fitness/factories/share-factory";
+import { makeSessionData } from "@/server/modules/fitness/factories/session-factory";
+import { makeDashboardData } from "@/server/modules/fitness/factories/dashboard-factory";
+import { makePhotoData } from "@/server/modules/fitness/factories/photo-factory";
+import { makePlanData } from "@/server/modules/fitness/factories/plan-factory";
+import { SharePage } from "@/components/modules/fitness/share/SharePage";
 
 export const metadata = {
-  title: "Shared — fit-stack",
+  title: "Shared — personal-hq",
   robots: { index: false, follow: false },
 };
 

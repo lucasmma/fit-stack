@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { makeShareData } from "@/server/factories/share-factory";
-import { makeSessionData } from "@/server/factories/session-factory";
-import { makeDashboardData } from "@/server/factories/dashboard-factory";
-import { makePhotoData } from "@/server/factories/photo-factory";
-import { makePlanData } from "@/server/factories/plan-factory";
+import { makeShareData } from "@/server/modules/fitness/factories/share-factory";
+import { makeSessionData } from "@/server/modules/fitness/factories/session-factory";
+import { makeDashboardData } from "@/server/modules/fitness/factories/dashboard-factory";
+import { makePhotoData } from "@/server/modules/fitness/factories/photo-factory";
+import { makePlanData } from "@/server/modules/fitness/factories/plan-factory";
 
 export const runtime = "nodejs";
 

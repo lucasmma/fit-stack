@@ -1,8 +1,10 @@
-# fit-stack
+# personal-hq
 
-Personal fitness tracker: plans → workouts → exercises → sets → gym sessions,
-with a calendar, dashboard, weekly progress photos, and revocable public share
-links.
+A single Next.js app that hosts multiple personal modules. The first module is
+fitness tracking — plans → workouts → exercises → sets → gym sessions, with a
+calendar, dashboard, weekly progress photos, and revocable public share links.
+More modules (bills, etc.) can be added under the same shell; see
+[`docs/architecture.md`](docs/architecture.md) for module conventions.
 
 Built as a single Next.js app (App Router), deployed on Vercel, against
 Supabase Postgres + S3 for photos.
@@ -19,39 +21,57 @@ Supabase Postgres + S3 for photos.
 ## Repository layout
 
 ```
-app/                    # Next.js App Router
-├── (auth)/login/       # public login
-├── (app)/              # authed routes: plans, sessions, calendar, dashboard, photos, settings
-├── share/[token]/      # public read-only share view
-└── api/                # route handlers grouped by resource
+app/                              # Next.js App Router
+├── (auth)/login/                 # public login
+├── (app)/                        # authed shell (Sidebar + MobileNav)
+│   ├── page.tsx                  # module launcher (one card per module)
+│   └── fitness/                  # fitness module — UI routes
+├── api/
+│   ├── auth/, me/, healthz/      # cross-cutting auth + account endpoints
+│   ├── public/share/[token]/     # public read-only share endpoint
+│   └── fitness/                  # fitness module — API routes
+└── share/[token]/                # public read-only share view
 components/
-├── ui/                 # atomic UI primitives (PageHeader, EmptyState, StatTile, ConfirmDialog, …)
-├── forms/              # Field, FormRoot, SubmitButton
-├── charts/             # chart primitives (ChartCard, LineSeriesChart, BarSeriesChart, …)
-├── features/           # feature components (plans/, sessions/, calendar/, dashboard/, photos/, share/)
-└── shell/              # app shell: Sidebar, MobileNav, UserMenu, NavLink, …
+├── ui/                           # generic primitives (PageHeader, StatTile, …)
+├── forms/                        # Field, FormRoot, SubmitButton
+├── charts/                       # chart wrappers (ChartCard, LineSeriesChart, …)
+├── shell/                        # Sidebar, MobileNav, UserMenu, NavItems, Logo
+└── modules/
+    └── fitness/                  # all fitness-domain components, by feature
 src/
-├── lib/                # runtime-free utilities, schemas, hooks, api client
-│   ├── schemas/        # zod schemas shared server + client
-│   ├── hooks/          # useZodForm, …
-│   ├── supabase/       # browser + server + middleware clients
-│   ├── utils/          # decimal, format, week-start, cn
-│   └── api-client.ts   # typed fetch wrapper (client components)
-└── server/             # server-only code (mark with `import "server-only"`)
-    ├── config/         # env, log, prisma, supabase-admin, s3
-    ├── middlewares/    # withAuth (Supabase session guard)
-    ├── route-adapters/ # adaptRoute (zod + error mapping for Next route handlers)
-    ├── presentation/   # controllers, protocols, helpers (framework-agnostic)
-    ├── services/       # s3-upload
-    ├── data/           # repositories — one per aggregate
-    ├── factories/      # wire controllers with their deps
-    └── scripts/        # seed-user CLI
+├── lib/
+│   ├── api-client.ts             # typed fetch wrapper
+│   ├── hooks/                    # useZodForm, …
+│   ├── supabase/                 # browser + server + middleware clients
+│   ├── utils/                    # decimal, format, week-start, cn
+│   └── schemas/                  # Zod schemas
+│       ├── shared/               # cross-module (profile, common enums)
+│       └── fitness/              # fitness module schemas
+└── server/
+    ├── shared/                   # cross-cutting infra (no business logic)
+    │   ├── config/               # env, prisma, supabase, s3, log
+    │   ├── middlewares/          # withAuth
+    │   ├── route-adapters/       # adaptRoute (Zod harness)
+    │   ├── presentation/         # protocols + helpers
+    │   ├── services/             # s3-upload, …
+    │   └── scripts/              # seed-user CLI
+    └── modules/
+        ├── account/              # cross-module: profile / "me" endpoints
+        └── fitness/              # fitness module server code
+            ├── controllers/
+            ├── data/
+            └── factories/
 prisma/
-├── schema.prisma       # full target schema
-└── seed.ts             # catalog seed (exercises)
+├── schema/                       # multi-file schema (Prisma 6+)
+│   ├── schema.prisma             # generator + datasource only
+│   ├── shared.prisma             # Profile, cross-module enums
+│   └── fitness.prisma            # fitness models
+└── migrations/                   # single migration history
 ```
 
-See `docs/implementation-plan.md` for design rationale and phased build plan.
+See [`docs/architecture.md`](docs/architecture.md) for module conventions and the
+checklist for adding a new module. See `docs/implementation-plan.md` for the
+original (fitness-only) design rationale.
 
 ## Getting started
 
@@ -127,7 +147,7 @@ Runtime notes:
 
 - API requests require a Supabase session cookie (set via `@supabase/ssr`).
 - `withAuth` checks the session; `adaptRoute` enforces CSRF by requiring either
-  `content-type: application/json` or `x-requested-with: fit-stack`.
+  `content-type: application/json` or `x-requested-with: personal-hq`.
 - Every Prisma query filters by `userId` (or joins through a relation that
   reaches `userId`). RLS is bypassed by the service-role client, so
   authorization is enforced in the data layer.

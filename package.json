@@ -1,9 +1,12 @@
 {
-  "name": "fit-stack",
+  "name": "personal-hq",
   "version": "0.1.0",
   "private": true,
   "engines": {
     "node": "20.x"
+  },
+  "prisma": {
+    "schema": "prisma/schema"
   },
   "scripts": {
     "dev": "next dev",

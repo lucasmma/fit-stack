@@ -5,7 +5,7 @@ import type {
   UpdatePlanInput,
   PlanDTO,
   PlanDetailDTO,
-} from "./schemas/plan";
+} from "./schemas/fitness/plan";
 import type {
   CreateWorkoutInput,
   UpdateWorkoutInput,
@@ -16,7 +16,7 @@ import type {
   UpdatePlanSetInput,
   PlanSetDTO,
   PlanExerciseDTO,
-} from "./schemas/workout";
+} from "./schemas/fitness/workout";
 import type {
   CreateSessionInput,
   SessionDTO,
@@ -27,17 +27,17 @@ import type {
   SessionSetDTO,
   SessionExerciseDTO,
   AddSessionExerciseInput,
-} from "./schemas/session";
-import type { ExerciseDTO, CreateExerciseInput } from "./schemas/exercise";
+} from "./schemas/fitness/session";
+import type { ExerciseDTO, CreateExerciseInput } from "./schemas/fitness/exercise";
 import type {
   PresignInput,
   PresignDTO,
   ConfirmPhotoInput,
   ConfirmPhotoSetInput,
   PhotoDTO,
-} from "./schemas/photo";
-import type { CreateShareLinkInput, ShareLinkDTO } from "./schemas/share";
-import type { ProfileDTO } from "./schemas/profile";
+} from "./schemas/fitness/photo";
+import type { CreateShareLinkInput, ShareLinkDTO } from "./schemas/fitness/share";
+import type { ProfileDTO } from "./schemas/shared/profile";
 
 class ApiError extends Error {
   constructor(
@@ -55,7 +55,7 @@ async function request<T>(
   init?: RequestInit & { json?: unknown; query?: Record<string, string | number | undefined> },
 ): Promise<T> {
   const headers = new Headers(init?.headers);
-  headers.set("x-requested-with", "fit-stack");
+  headers.set("x-requested-with", "personal-hq");
 
   let body: BodyInit | null = null;
   if (init?.json !== undefined) {
@@ -96,69 +96,69 @@ export const api = {
     get: () => request<ProfileDTO>("/api/me"),
   },
   plans: {
-    list: () => request<PlanDTO[]>("/api/plans"),
-    get: (id: string) => request<PlanDetailDTO>(`/api/plans/${id}`),
-    create: (input: CreatePlanInput) => request<PlanDTO>("/api/plans", { method: "POST", json: input }),
+    list: () => request<PlanDTO[]>("/api/fitness/plans"),
+    get: (id: string) => request<PlanDetailDTO>(`/api/fitness/plans/${id}`),
+    create: (input: CreatePlanInput) => request<PlanDTO>("/api/fitness/plans", { method: "POST", json: input }),
     update: (id: string, input: UpdatePlanInput) =>
-      request<PlanDTO>(`/api/plans/${id}`, { method: "PATCH", json: input }),
-    delete: (id: string) => request<void>(`/api/plans/${id}`, { method: "DELETE" }),
+      request<PlanDTO>(`/api/fitness/plans/${id}`, { method: "PATCH", json: input }),
+    delete: (id: string) => request<void>(`/api/fitness/plans/${id}`, { method: "DELETE" }),
     activate: (id: string) =>
-      request<PlanDTO>(`/api/plans/${id}/activate`, { method: "POST", json: {} }),
+      request<PlanDTO>(`/api/fitness/plans/${id}/activate`, { method: "POST", json: {} }),
   },
   workouts: {
     create: (planId: string, input: CreateWorkoutInput) =>
-      request<WorkoutDetailDTO>(`/api/plans/${planId}/workouts`, { method: "POST", json: input }),
-    get: (id: string) => request<WorkoutDetailDTO>(`/api/workouts/${id}`),
+      request<WorkoutDetailDTO>(`/api/fitness/plans/${planId}/workouts`, { method: "POST", json: input }),
+    get: (id: string) => request<WorkoutDetailDTO>(`/api/fitness/workouts/${id}`),
     update: (id: string, input: UpdateWorkoutInput) =>
-      request<WorkoutDetailDTO>(`/api/workouts/${id}`, { method: "PATCH", json: input }),
-    delete: (id: string) => request<void>(`/api/workouts/${id}`, { method: "DELETE" }),
+      request<WorkoutDetailDTO>(`/api/fitness/workouts/${id}`, { method: "PATCH", json: input }),
+    delete: (id: string) => request<void>(`/api/fitness/workouts/${id}`, { method: "DELETE" }),
     addExercise: (workoutId: string, input: AddPlanExerciseInput) =>
-      request<PlanExerciseDTO>(`/api/workouts/${workoutId}/exercises`, {
+      request<PlanExerciseDTO>(`/api/fitness/workouts/${workoutId}/exercises`, {
         method: "POST",
         json: input,
       }),
     updateExercise: (planExerciseId: string, input: UpdatePlanExerciseInput) =>
-      request<PlanExerciseDTO>(`/api/plan-exercises/${planExerciseId}`, {
+      request<PlanExerciseDTO>(`/api/fitness/plan-exercises/${planExerciseId}`, {
         method: "PATCH",
         json: input,
       }),
     removeExercise: (planExerciseId: string) =>
-      request<void>(`/api/plan-exercises/${planExerciseId}`, { method: "DELETE" }),
+      request<void>(`/api/fitness/plan-exercises/${planExerciseId}`, { method: "DELETE" }),
     addSet: (planExerciseId: string, input: CreatePlanSetInput) =>
-      request<PlanSetDTO>(`/api/plan-exercises/${planExerciseId}/sets`, {
+      request<PlanSetDTO>(`/api/fitness/plan-exercises/${planExerciseId}/sets`, {
         method: "POST",
         json: input,
       }),
     updateSet: (planSetId: string, input: UpdatePlanSetInput) =>
-      request<PlanSetDTO>(`/api/plan-sets/${planSetId}`, { method: "PATCH", json: input }),
+      request<PlanSetDTO>(`/api/fitness/plan-sets/${planSetId}`, { method: "PATCH", json: input }),
     removeSet: (planSetId: string) =>
-      request<void>(`/api/plan-sets/${planSetId}`, { method: "DELETE" }),
+      request<void>(`/api/fitness/plan-sets/${planSetId}`, { method: "DELETE" }),
   },
   exercises: {
     list: (query?: { q?: string }) =>
-      request<ExerciseDTO[]>("/api/exercises", { query }),
+      request<ExerciseDTO[]>("/api/fitness/exercises", { query }),
     create: (input: CreateExerciseInput) =>
-      request<ExerciseDTO>("/api/exercises", { method: "POST", json: input }),
+      request<ExerciseDTO>("/api/fitness/exercises", { method: "POST", json: input }),
   },
   sessions: {
     list: (query?: { from?: string; to?: string }) =>
-      request<SessionSummaryDTO[]>("/api/sessions", { query }),
-    get: (id: string) => request<SessionDetailDTO>(`/api/sessions/${id}`),
+      request<SessionSummaryDTO[]>("/api/fitness/sessions", { query }),
+    get: (id: string) => request<SessionDetailDTO>(`/api/fitness/sessions/${id}`),
     create: (input: CreateSessionInput) =>
-      request<SessionDetailDTO>("/api/sessions", { method: "POST", json: input }),
+      request<SessionDetailDTO>("/api/fitness/sessions", { method: "POST", json: input }),
     finish: (id: string) =>
-      request<SessionDTO>(`/api/sessions/${id}/finish`, { method: "POST", json: {} }),
+      request<SessionDTO>(`/api/fitness/sessions/${id}/finish`, { method: "POST", json: {} }),
     updateSet: (setId: string, input: UpdateSessionSetInput) =>
-      request<SessionSetDTO>(`/api/session-sets/${setId}`, { method: "PATCH", json: input }),
+      request<SessionSetDTO>(`/api/fitness/session-sets/${setId}`, { method: "PATCH", json: input }),
     deleteSet: (setId: string) =>
-      request<void>(`/api/session-sets/${setId}`, { method: "DELETE" }),
+      request<void>(`/api/fitness/session-sets/${setId}`, { method: "DELETE" }),
     addSet: (sessionExerciseId: string, input: AddSessionSetInput) =>
-      request<SessionSetDTO>(`/api/session-exercises/${sessionExerciseId}/sets`, {
+      request<SessionSetDTO>(`/api/fitness/session-exercises/${sessionExerciseId}/sets`, {
         method: "POST",
         json: input,
       }),
     addExercise: (sessionId: string, input: AddSessionExerciseInput) =>
-      request<SessionExerciseDTO>(`/api/sessions/${sessionId}/exercises`, {
+      request<SessionExerciseDTO>(`/api/fitness/sessions/${sessionId}/exercises`, {
         method: "POST",
         json: input,
       }),
@@ -166,37 +166,37 @@ export const api = {
   dashboard: {
     volume: (weeks: number) =>
       request<Array<{ weekStart: string; volume: number; sessions: number }>>(
-        "/api/dashboard/volume",
+        "/api/fitness/dashboard/volume",
         { query: { weeks } },
       ),
     exerciseProgression: (exerciseId: string) =>
       request<Array<{ date: string; topWeight: number; estimatedOneRm: number }>>(
-        `/api/dashboard/exercise/${exerciseId}/progression`,
+        `/api/fitness/dashboard/exercise/${exerciseId}/progression`,
       ),
     prs: (limit = 5) =>
       request<Array<{ exerciseId: string; exerciseName: string; weight: number; date: string }>>(
-        "/api/dashboard/prs",
+        "/api/fitness/dashboard/prs",
         { query: { limit } },
       ),
     bodyWeight: () =>
-      request<Array<{ date: string; bodyWeightKg: number }>>("/api/dashboard/body-weight"),
+      request<Array<{ date: string; bodyWeightKg: number }>>("/api/fitness/dashboard/body-weight"),
   },
   photos: {
     list: (query?: { from?: string; to?: string }) =>
-      request<PhotoDTO[]>("/api/photos", { query }),
+      request<PhotoDTO[]>("/api/fitness/photos", { query }),
     presign: (input: PresignInput) =>
-      request<PresignDTO>("/api/photos/presign", { method: "POST", json: input }),
+      request<PresignDTO>("/api/fitness/photos/presign", { method: "POST", json: input }),
     confirm: (input: ConfirmPhotoInput) =>
-      request<PhotoDTO>("/api/photos/confirm", { method: "POST", json: input }),
+      request<PhotoDTO>("/api/fitness/photos/confirm", { method: "POST", json: input }),
     confirmSet: (input: ConfirmPhotoSetInput) =>
-      request<PhotoDTO[]>("/api/photos/sets", { method: "POST", json: input }),
-    delete: (id: string) => request<void>(`/api/photos/${id}`, { method: "DELETE" }),
+      request<PhotoDTO[]>("/api/fitness/photos/sets", { method: "POST", json: input }),
+    delete: (id: string) => request<void>(`/api/fitness/photos/${id}`, { method: "DELETE" }),
   },
   shareLinks: {
-    list: () => request<ShareLinkDTO[]>("/api/share-links"),
+    list: () => request<ShareLinkDTO[]>("/api/fitness/share-links"),
     create: (input: CreateShareLinkInput) =>
-      request<ShareLinkDTO>("/api/share-links", { method: "POST", json: input }),
-    revoke: (id: string) => request<void>(`/api/share-links/${id}`, { method: "DELETE" }),
+      request<ShareLinkDTO>("/api/fitness/share-links", { method: "POST", json: input }),
+    revoke: (id: string) => request<void>(`/api/fitness/share-links/${id}`, { method: "DELETE" }),
   },
 };
 

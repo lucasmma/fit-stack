@@ -3,8 +3,8 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "fit-stack",
-  description: "Track your plans, workouts, sessions, and progress — all in one place.",
+  title: "personal-hq",
+  description: "Your personal HQ — fitness, bills, and more in one place.",
   icons: { icon: "/icon.svg" },
 };
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
-import { prisma } from "@/server/config/prisma";
+import { prisma } from "@/server/shared/config/prisma";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { MobileNav } from "@/components/shell/MobileNav";
 

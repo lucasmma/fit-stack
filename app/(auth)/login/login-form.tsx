@@ -20,7 +20,7 @@ type LoginInput = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const from = params.get("from") ?? "/plans";
+  const from = params.get("from") ?? "/";
 
   const form = useZodForm({
     schema: loginSchema,

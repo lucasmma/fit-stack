@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "fit-stack",
-    short_name: "fit-stack",
-    description: "Track your plans, workouts, sessions, and progress.",
+    name: "personal-hq",
+    short_name: "personal-hq",
+    description: "Your personal HQ — fitness, bills, and more in one place.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

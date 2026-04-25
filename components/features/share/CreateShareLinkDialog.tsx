@@ -48,6 +48,7 @@ export function CreateShareLinkDialog({ isOpen, onClose, onCreate }: CreateShare
       isOpen={isOpen}
       onClose={onClose}
       size="md"
+      scrollBehavior="inside"
       title="New share link"
       bodyClassName="flex flex-col gap-3"
       footer={

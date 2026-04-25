@@ -71,6 +71,7 @@ export function StartSessionButton({ plans, defaultPlanId }: StartSessionButtonP
         isOpen={isOpen}
         onClose={handleClose}
         size="md"
+        scrollBehavior="inside"
         title="Start a session"
         bodyClassName="flex flex-col gap-4"
         footer={

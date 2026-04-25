@@ -31,6 +31,7 @@ export function AddWorkoutDialog({ isOpen, onClose, onCreate }: AddWorkoutDialog
       isOpen={isOpen}
       onClose={onClose}
       size="md"
+      scrollBehavior="inside"
       title="Add workout"
       bodyClassName="flex flex-col gap-3"
       contentWrapper={(c) => (

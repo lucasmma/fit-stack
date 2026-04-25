@@ -43,6 +43,7 @@ export function CreatePlanButton() {
         isOpen={isOpen}
         onClose={onClose}
         size="md"
+        scrollBehavior="inside"
         title="New plan"
         bodyClassName="flex flex-col gap-3"
         contentWrapper={(c) => (

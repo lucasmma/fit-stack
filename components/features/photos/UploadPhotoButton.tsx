@@ -240,6 +240,7 @@ export function UploadPhotoButton() {
         isOpen={isOpen}
         onClose={handleClose}
         size="2xl"
+        scrollBehavior="inside"
         title="Upload progress photo set"
         bodyClassName="flex flex-col gap-4"
         contentWrapper={(c) => (

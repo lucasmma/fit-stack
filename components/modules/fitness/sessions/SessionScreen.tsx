@@ -55,7 +55,11 @@ export function SessionScreen({ initialSession, catalog }: SessionScreenProps) {
         ...prev,
         exercises: prev.exercises.map((e) => ({
           ...e,
-          sets: e.sets.map((s) => (s.id === setId ? updated : s)),
+          sets: e.sets.map((s) =>
+            s.id === setId
+              ? { ...updated, previousReps: s.previousReps, previousWeight: s.previousWeight }
+              : s,
+          ),
         })),
       }));
     } catch (err) {

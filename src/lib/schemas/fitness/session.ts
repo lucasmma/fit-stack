@@ -14,6 +14,8 @@ export const SessionSetDTOSchema = z.object({
   completed: z.boolean(),
   completedAt: z.string().datetime().nullable(),
   notes: z.string().nullable(),
+  previousReps: z.number().int().nullable(),
+  previousWeight: z.number().nullable(),
 });
 export type SessionSetDTO = z.infer<typeof SessionSetDTOSchema>;
 

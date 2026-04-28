@@ -104,6 +104,8 @@ export function mapSessionSet(s: SessionSet): SessionSetDTO {
     completed: s.completed,
     completedAt: s.completedAt?.toISOString() ?? null,
     notes: s.notes,
+    previousReps: null,
+    previousWeight: null,
   };
 }
 

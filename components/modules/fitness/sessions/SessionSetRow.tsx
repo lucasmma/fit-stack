@@ -78,6 +78,7 @@ export function SessionSetRow({
         onChange={(e) => setReps(e.target.value)}
         onBlur={commitReps}
         isDisabled={readOnly}
+        placeholder={set.previousReps != null ? String(set.previousReps) : undefined}
         endContent={<span className="text-xs text-default-500">reps</span>}
       />
       <Input
@@ -92,6 +93,7 @@ export function SessionSetRow({
         onChange={(e) => setWeight(e.target.value)}
         onBlur={commitWeight}
         isDisabled={readOnly}
+        placeholder={set.previousWeight != null ? String(set.previousWeight) : undefined}
         endContent={<span className="text-xs text-default-500">kg</span>}
       />
       {readOnly ? (

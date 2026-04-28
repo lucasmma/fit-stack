@@ -84,7 +84,52 @@ export class SessionData {
       },
     });
     if (!session) throw errors.notFound("Session not found");
-    return mapSession(session);
+
+    const previous = await this.prisma.session.findFirst({
+      where: {
+        userId,
+        workoutId: session.workoutId,
+        finishedAt: { not: null },
+        id: { not: session.id },
+        startedAt: { lt: session.startedAt },
+      },
+      orderBy: { startedAt: "desc" },
+      include: {
+        exercises: {
+          select: {
+            exerciseId: true,
+            sets: {
+              orderBy: { order: "asc" },
+              select: { order: true, reps: true, weight: true },
+            },
+          },
+        },
+      },
+    });
+
+    const dto = mapSession(session);
+    if (!previous) return dto;
+
+    const previousByExercise = new Map<string, Array<{ reps: number | null; weight: number | null }>>();
+    for (const pe of previous.exercises) {
+      previousByExercise.set(
+        pe.exerciseId,
+        pe.sets.map((s) => ({ reps: s.reps, weight: toNumber(s.weight) })),
+      );
+    }
+
+    for (const ex of dto.exercises) {
+      const prevSets = previousByExercise.get(ex.exerciseId);
+      if (!prevSets) continue;
+      ex.sets.forEach((set, i) => {
+        const prev = prevSets[i];
+        if (!prev) return;
+        set.previousReps = prev.reps;
+        set.previousWeight = prev.weight;
+      });
+    }
+
+    return dto;
   }
 
   async create(userId: string, input: CreateSessionInput): Promise<SessionDetailDTO> {

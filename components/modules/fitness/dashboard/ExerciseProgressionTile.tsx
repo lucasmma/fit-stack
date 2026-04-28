@@ -15,13 +15,10 @@ interface ExerciseProgressionTileProps {
   prefetched?: Record<string, ProgressionPoint[]>;
 }
 
-export function ExerciseProgressionTile({
-  exercises,
-  prefetched,
-}: ExerciseProgressionTileProps) {
+export function ExerciseProgressionTile({ exercises, prefetched }: ExerciseProgressionTileProps) {
   const [selected, setSelected] = useState<string | null>(exercises[0]?.id ?? null);
   const [data, setData] = useState<ProgressionPoint[]>(
-    prefetched && exercises[0] ? prefetched[exercises[0].id] ?? [] : [],
+    prefetched && exercises[0] ? (prefetched[exercises[0].id] ?? []) : [],
   );
   const [loading, setLoading] = useState(false);
 
@@ -67,6 +64,7 @@ export function ExerciseProgressionTile({
           size="sm"
           variant="bordered"
           className="w-48"
+          classNames={{ popoverContent: "min-w-[22rem]" }}
           selectedKeys={selected ? new Set([selected]) : new Set()}
           onSelectionChange={(keys) => {
             const next = Array.from(keys as Set<string>)[0];
@@ -74,16 +72,14 @@ export function ExerciseProgressionTile({
           }}
         >
           {exercises.map((e) => (
-            <SelectItem key={e.id}>{e.name}</SelectItem>
+            <SelectItem key={e.id} className="whitespace-normal" textValue={e.name}>
+              {e.name}
+            </SelectItem>
           ))}
         </Select>
       }
     >
-      {loading ? (
-        <EmptyChart message="Loading…" />
-      ) : (
-        <LineSeriesChart data={points} unit=" kg" />
-      )}
+      {loading ? <EmptyChart message="Loading…" /> : <LineSeriesChart data={points} unit=" kg" />}
     </ChartCard>
   );
 }

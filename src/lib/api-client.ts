@@ -170,7 +170,7 @@ export const api = {
         { query: { weeks } },
       ),
     exerciseProgression: (exerciseId: string) =>
-      request<Array<{ date: string; topWeight: number; estimatedOneRm: number }>>(
+      request<Array<{ date: string; topWeight: number; estimatedOneRm: number; volume: number }>>(
         `/api/fitness/dashboard/exercise/${exerciseId}/progression`,
       ),
     prs: (limit = 5) =>

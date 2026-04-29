@@ -42,3 +42,8 @@ prisma/dev.db-journal
 
 #build
 *.tsbuildinfo
+
+# mnemo (project-scoped install)
+.claude/
+.mnemo/
+.mcp.json

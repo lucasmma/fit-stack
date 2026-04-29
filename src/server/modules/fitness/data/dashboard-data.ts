@@ -4,7 +4,12 @@ import { startOfISOWeek, subWeeks, formatISO } from "date-fns";
 import { toNumber } from "@/lib/utils/decimal";
 
 type VolumePoint = { weekStart: string; volume: number; sessions: number };
-type ProgressionPoint = { date: string; topWeight: number; estimatedOneRm: number };
+type ProgressionPoint = {
+  date: string;
+  topWeight: number;
+  estimatedOneRm: number;
+  volume: number;
+};
 type PrRow = { exerciseId: string; exerciseName: string; weight: number; date: string };
 type ProgressionForExercise = {
   exerciseId: string;
@@ -80,16 +85,17 @@ export class DashboardData {
       orderBy: { sessionExercise: { session: { startedAt: "asc" } } },
     });
 
-    const byDate = new Map<string, { top: number; oneRm: number }>();
+    const byDate = new Map<string, { top: number; oneRm: number; volume: number }>();
     for (const set of sets) {
       const date = set.sessionExercise.session.startedAt.toISOString().slice(0, 10);
       const reps = set.reps!;
       const weight = toNumber(set.weight) ?? 0;
       const oneRm = weight * (1 + reps / 30); // Epley
-      const current = byDate.get(date) ?? { top: 0, oneRm: 0 };
+      const current = byDate.get(date) ?? { top: 0, oneRm: 0, volume: 0 };
       byDate.set(date, {
         top: Math.max(current.top, weight),
         oneRm: Math.max(current.oneRm, oneRm),
+        volume: current.volume + reps * weight,
       });
     }
 
@@ -97,6 +103,7 @@ export class DashboardData {
       date,
       topWeight: Math.round(v.top * 100) / 100,
       estimatedOneRm: Math.round(v.oneRm * 100) / 100,
+      volume: Math.round(v.volume),
     }));
   }
 

@@ -4,7 +4,10 @@ import { makeSessionData } from "@/server/modules/fitness/factories/session-fact
 import { makeDashboardData } from "@/server/modules/fitness/factories/dashboard-factory";
 import { makePhotoData } from "@/server/modules/fitness/factories/photo-factory";
 import { makePlanData } from "@/server/modules/fitness/factories/plan-factory";
+import { makeWorkoutData } from "@/server/modules/fitness/factories/workout-factory";
 import { SharePage } from "@/components/modules/fitness/share/SharePage";
+import type { SessionDetailDTO } from "@/lib/schemas/fitness/session";
+import type { WorkoutDetailDTO } from "@/lib/schemas/fitness/workout";
 
 export const metadata = {
   title: "Shared — personal-hq",
@@ -38,6 +41,21 @@ export default async function PublicSharePage({
       includeWorkouts ? makePlanData().getActive(link.userId) : null,
     ]);
 
+  let sessionDetails: Record<string, SessionDetailDTO> = {};
+  let workoutDetails: Record<string, WorkoutDetailDTO> = {};
+  if (includeWorkouts) {
+    const sessionData = makeSessionData();
+    const workoutData = makeWorkoutData();
+    const [sessionDetailList, workoutDetailList] = await Promise.all([
+      Promise.all((sessions ?? []).map((s) => sessionData.getDetail(s.id, link.userId))),
+      Promise.all(
+        (activePlan?.workouts ?? []).map((w) => workoutData.getDetail(w.id, link.userId)),
+      ),
+    ]);
+    sessionDetails = Object.fromEntries(sessionDetailList.map((d) => [d.id, d]));
+    workoutDetails = Object.fromEntries(workoutDetailList.map((d) => [d.id, d]));
+  }
+
   return (
     <SharePage
       name={link.name}
@@ -58,6 +76,8 @@ export default async function PublicSharePage({
           ? {
               sessions: sessions ?? [],
               activePlan: activePlan ? { name: activePlan.name, workouts: activePlan.workouts } : null,
+              sessionDetails,
+              workoutDetails,
             }
           : null
       }

@@ -6,3 +6,7 @@ import { WorkoutController } from "@/server/modules/fitness/controllers/workout-
 export function makeWorkoutController() {
   return new WorkoutController(new WorkoutData(prisma));
 }
+
+export function makeWorkoutData() {
+  return new WorkoutData(prisma);
+}

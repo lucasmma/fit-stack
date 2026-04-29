@@ -1,18 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import { Card, CardBody, Chip } from "@heroui/react";
-import { format, parseISO } from "date-fns";
+import { Chip } from "@heroui/react";
 import type { PhotoDTO } from "@/lib/schemas/fitness/photo";
-import type { SessionSummaryDTO } from "@/lib/schemas/fitness/session";
+import type { SessionSummaryDTO, SessionDetailDTO } from "@/lib/schemas/fitness/session";
+import type { WorkoutDetailDTO } from "@/lib/schemas/fitness/workout";
 import { SHARE_SCOPE_LABEL, type ShareScope } from "@/lib/schemas/fitness/share";
 import { VolumeTile } from "@/components/modules/fitness/dashboard/VolumeTile";
 import { SessionsTile } from "@/components/modules/fitness/dashboard/SessionsTile";
 import { PrsTile } from "@/components/modules/fitness/dashboard/PrsTile";
 import { BodyWeightTile } from "@/components/modules/fitness/dashboard/BodyWeightTile";
 import { ExerciseProgressionTile } from "@/components/modules/fitness/dashboard/ExerciseProgressionTile";
+import { WorkoutsSection } from "@/components/modules/fitness/dashboard/WorkoutsSection";
 
-type ProgressionPoint = { date: string; topWeight: number; estimatedOneRm: number };
+type ProgressionPoint = {
+  date: string;
+  topWeight: number;
+  estimatedOneRm: number;
+  volume: number;
+};
 
 interface SharePageProps {
   name: string | null;
@@ -31,6 +37,8 @@ interface SharePageProps {
   workouts: {
     sessions: SessionSummaryDTO[];
     activePlan: { name: string; workouts: Array<{ id: string; name: string }> } | null;
+    sessionDetails: Record<string, SessionDetailDTO>;
+    workoutDetails: Record<string, WorkoutDetailDTO>;
   } | null;
 }
 
@@ -106,50 +114,16 @@ export function SharePage({ name, scope, progress, workouts }: SharePageProps) {
         )}
 
         {workouts && (
-          <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-default-500">
-              Workouts
-            </h2>
-            {workouts.activePlan && (
-              <Card shadow="sm" className="mb-4">
-                <CardBody className="gap-1">
-                  <p className="text-xs font-medium uppercase tracking-wide text-default-500">
-                    Active plan
-                  </p>
-                  <p className="text-lg font-semibold">{workouts.activePlan.name}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {workouts.activePlan.workouts.map((w) => (
-                      <Chip key={w.id} size="sm" variant="flat">
-                        {w.name}
-                      </Chip>
-                    ))}
-                  </div>
-                </CardBody>
-              </Card>
-            )}
-            {workouts.sessions.length === 0 ? (
-              <p className="text-sm text-default-500">No sessions logged yet.</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {workouts.sessions.map((s) => (
-                  <Card key={s.id} shadow="sm">
-                    <CardBody className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="font-medium">{s.workoutName}</p>
-                        <p className="text-xs text-default-500">
-                          {s.planName} · {format(parseISO(s.startedAt), "EEE d MMM")}
-                        </p>
-                      </div>
-                      <div className="flex gap-4 text-sm text-default-500">
-                        <span>{s.completedSetCount}/{s.totalSetCount} sets</span>
-                        <span>{s.totalVolume.toLocaleString()} kg</span>
-                      </div>
-                    </CardBody>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </section>
+          <WorkoutsSection
+            sessions={workouts.sessions}
+            activePlan={workouts.activePlan}
+            expandable
+            prefetched={{
+              sessionDetails: workouts.sessionDetails,
+              workoutDetails: workouts.workoutDetails,
+              progressions: progressionPrefetched,
+            }}
+          />
         )}
       </div>
     </div>

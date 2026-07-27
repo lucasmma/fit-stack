@@ -78,6 +78,7 @@ enum SetType {
   REST_PAUSE
   FAILURE
   BACKOFF
+  CLUSTER
   OTHER
 }
 

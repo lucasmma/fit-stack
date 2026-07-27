@@ -10,6 +10,7 @@ export const SetTypeEnum = z.enum([
   "REST_PAUSE",
   "FAILURE",
   "BACKOFF",
+  "CLUSTER",
   "OTHER",
 ]);
 
@@ -23,6 +24,7 @@ export const SET_TYPE_LABEL: Record<SetType, string> = {
   REST_PAUSE: "Rest-pause",
   FAILURE: "Failure",
   BACKOFF: "Back-off",
+  CLUSTER: "Cluster set",
   OTHER: "Other",
 };
 

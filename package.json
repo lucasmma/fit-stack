@@ -19,6 +19,7 @@
     "seed:user": "tsx --env-file=.env src/server/scripts/seed-user.ts",
     "seed:catalog": "tsx prisma/seed-exercises.ts",
     "seed:plan": "tsx --env-file=.env prisma/seed-plan.ts",
+    "seed:plan:consultoria": "tsx --env-file=.env prisma/seed-plan-consultoria-2026-07-24.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

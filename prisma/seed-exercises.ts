@@ -10,6 +10,7 @@ const CATALOG: Array<{
   // Peito
   { name: "Supino reto barra", muscleGroup: "Peito", equipment: "Barra" },
   { name: "Supino reto halter", muscleGroup: "Peito", equipment: "Halter" },
+  { name: "Supino reto máquina", muscleGroup: "Peito", equipment: "Máquina" },
   { name: "Supino inclinado barra", muscleGroup: "Peito", equipment: "Barra" },
   { name: "Supino inclinado halter", muscleGroup: "Peito", equipment: "Halter" },
   { name: "Supino declinado", muscleGroup: "Peito", equipment: "Barra" },
@@ -47,6 +48,7 @@ const CATALOG: Array<{
   // Braços — bíceps
   { name: "Rosca direta barra", muscleGroup: "Braços", equipment: "Barra" },
   { name: "Rosca direta banco inclinado", muscleGroup: "Braços", equipment: "Halter" },
+  { name: "Rosca direta polia baixa", muscleGroup: "Braços", equipment: "Polia" },
   { name: "Rosca alternada halter", muscleGroup: "Braços", equipment: "Halter" },
   { name: "Rosca martelo", muscleGroup: "Braços", equipment: "Halter" },
   { name: "Rosca scott", muscleGroup: "Braços", equipment: "Barra" },
